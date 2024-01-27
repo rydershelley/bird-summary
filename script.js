@@ -13,6 +13,8 @@ const totalDistance = document.getElementById("total-distance");
 const mostOftenLocation = document.getElementById("most-often-location");
 
 function processData(results) {
+  /////////////////////////
+  // Get data from file and filter by year
   const data = results.data; // Array of row objects
 
   // Select year to summarize - Turn into a user option
@@ -24,6 +26,7 @@ function processData(results) {
     row["Date"]?.startsWith(selectYear)
   );
 
+  /////////////////////////
   // Create obj of Submission IDs, get length for number of lists,
   // yearLists[1] is number of species reported
   //
@@ -36,6 +39,8 @@ function processData(results) {
   const listIDs = Object.keys(yearLists);
   const countLists = Object.keys(yearLists).length;
 
+  /////////////////////////
+  // SPECIES Info
   // Species and count of instances (number of lists it was on)
   const yearSpecies = filteredYear.reduce((acc, cur) => {
     const key = cur["Common Name"];
@@ -70,13 +75,15 @@ function processData(results) {
     a[1] > b[1] ? a : b
   );
 
+  /////////////////////////
+  // LOCATION Info
   // Function to get location that matches id from unique id array
   const getLocation = (id) => {
     const obj = filteredYear.find((row) => row["Submission ID"] === id);
     return obj ? obj["Location"] : null;
   };
 
-  // Obj of locations used for the year
+  // Array of locations used for the year (by list)
   const listLocations = listIDs.map((id) => getLocation(id));
   const yearLocations = listLocations.reduce((acc, cur) => {
     if (!acc[cur]) acc[cur] = 0;
@@ -85,11 +92,40 @@ function processData(results) {
   }, {});
 
   const countLocations = Object.keys(yearLocations).length;
-
   const highCountLocation = Object.entries(yearLocations).reduce((a, b) =>
     a[1] > b[1] ? a : b
   );
 
+  /////////////////////////
+  //
+  // TIME Info
+  //
+  const startTimes = filteredYear.reduce((acc, cur) => {
+    const startTime = cur["Time"].split(" ");
+    let hour = +startTime[0].split(":")[0];
+    if (startTime[1] === "PM") {
+      if (hour === "12") acc.push(startTime[0]);
+      else {
+        hour += 12;
+        acc.push(`${hour}:${startTime[0].split(":")[1]}`);
+      }
+    } else if (hour === "12") acc.push(`00:${startTime[0].split(":")[1]}}`);
+    else acc.push(startTime[0]);
+    return acc;
+  }, []);
+
+  const avgStart = Math.floor(
+    startTimes.reduce((acc, cur) => acc + +cur.split(":")[0], 0) /
+      startTimes.length
+  );
+
+  console.log(avgStart);
+
+  ///////////////////////////////////
+  //
+  // Display info
+  //
+  //
   outputTitle.innerHTML = `Your summary for ${selectYear}`;
   numChecklists.innerHTML = `You reported ${countLists} lists to eBird.`;
   numSpecies.innerHTML = `Total species for the year: ${countSpecies.length}`;
@@ -98,11 +134,13 @@ function processData(results) {
   The high count was ${mostSpeciesCount[0]}, with ${mostSpeciesCount[1]} individuals.`;
   mostOftenLocation.innerHTML = `You reported lists from ${countLocations} different locations,
   most often from ${highCountLocation[0]} (${highCountLocation[1]} lists)`;
-
-  for (const rowObj of filteredYear) {
-    // const date = rowObj["Date"];
-    // const name = rowObj["Name"];
-  }
+  avgStartTime.innerHTML = `On average, you started your lists in the ${
+    avgStart > 12
+      ? `${avgStart - 12} PM`
+      : avgStart == 0
+      ? "Midnight"
+      : `${avgStart} AM`
+  } hour.`;
 }
 
 function readAndProcessCSV(fileName) {
@@ -119,23 +157,27 @@ function readAndProcessCSV(fileName) {
 /////////////////////////
 // PREVENT REUPLOAD
 //
-//readAndProcessCSV("MyEBirdData.csv");
+// readAndProcessCSV("MyEBirdData.csv");
 
+/////////////////////////
+//
+// Event Listeners
+//
+//
+
+// Upload and process on submit
 uploadForm.addEventListener("submit", function (event) {
-  // Prevent the default form submission behavior
   event.preventDefault();
   readAndProcessCSV(fileUpload.files[0]);
 });
 
+// Display filename when file is selected
 fileUpload.addEventListener("change", function () {
-  // Get the file name from the input value
   const fileName = fileUpload.value.split("\\").pop();
-  // Update the label text with the file name
   fileLabel.textContent = fileName;
 });
 
-// Add a reset event listener to the form
+// Reset file input text when loaded
 uploadForm.addEventListener("reset", function () {
-  // Change the label text back to Choose File
   fileLabel.textContent = "Choose File";
 });
