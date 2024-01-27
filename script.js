@@ -20,8 +20,8 @@ function processData(results) {
   const selectYear = "2023";
 
   // Filtered data by year
-  const filteredYear = data.filter(
-    (row) => row["Date"].split("-")[0] === selectYear
+  const filteredYear = data.filter((row) =>
+    row["Date"]?.startsWith(selectYear)
   );
 
   // Create obj of Submission IDs, get length for number of lists,
@@ -115,6 +115,11 @@ function readAndProcessCSV(fileName) {
     },
   });
 }
+
+/////////////////////////
+// PREVENT REUPLOAD
+//
+//readAndProcessCSV("MyEBirdData.csv");
 
 uploadForm.addEventListener("submit", function (event) {
   // Prevent the default form submission behavior
