@@ -8,18 +8,23 @@
     <title>Annual Bird Summary</title>
   </head>
   <body>
-    <h1>Annual Bird List Summary</h1>
-    <p>
-      Submit your eBird data (download from your account:
-      <a href="https://ebird.org/downloadMyData"
-        >https://ebird.org/downloadMyData</a
-      >) for a wrap up of your year!
-    </p>
-    <form id="upload-form">
-      <label for="file-upload" class="custom-file-upload"> Choose File </label>
-      <input id="file-upload" type="file" accept=".csv" />
-      <button id="submit-button" type="submit">Upload</button>
-    </form>
+    <header>
+      <h1>Annual Bird List Summary</h1>
+      <p>
+        Submit your eBird data (download from your account:
+        <a href="https://ebird.org/downloadMyData"
+          >https://ebird.org/downloadMyData</a
+        >) for a wrap up of your year!
+      </p>
+      <form id="upload-form">
+        <label for="file-upload" class="custom-file-upload">
+          Choose File
+        </label>
+        <input id="file-upload" type="file" accept=".csv" />
+        <button id="submit-button" type="submit">Upload</button>
+      </form>
+    </header>
+    <br />
     <div id="output">
       <div id="output-title"></div>
       <div id="num-checklists"></div>
@@ -27,11 +32,16 @@
       <div id="total-birds"></div>
       <div id="most-often-species"></div>
       <div id="avg-start-time"></div>
+      <div id="time-plot"></div>
       <div id="total-distance"></div>
       <div id="most-often-location"></div>
     </div>
+    <br />
+    <footer>©2024 Ryder Shelley</footer>
     <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.1/papaparse.min.js"></script>
 
+    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@observablehq/plot@0.6"></script>
     <script src="script.js"></script>
 
     <!-- <script
@@ -58,7 +68,6 @@
         dataLayer.push(arguments);
       }
       gtag("js", new Date());
-
       gtag("config", "G-KGL6EG2VB4");
     </script>
   </body>

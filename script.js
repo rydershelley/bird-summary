@@ -11,11 +11,16 @@ const mostOftenSpecies = document.getElementById("most-often-species");
 const avgStartTime = document.getElementById("avg-start-time");
 const totalDistance = document.getElementById("total-distance");
 const mostOftenLocation = document.getElementById("most-often-location");
+const timePlotDiv = document.querySelector("#time-plot");
 
 function processData(results) {
   /////////////////////////
   // Get data from file and filter by year
   const data = results.data; // Array of row objects
+  if (!data[0]["Submission ID"]) {
+    outputTitle.innerHTML =
+      "File does not match eBird formatting, please try again!";
+  }
 
   // Select year to summarize - Turn into a user option
   //TODO;
@@ -100,6 +105,7 @@ function processData(results) {
   //
   // TIME Info
   //
+  // array of all times, normalized to hh:mm
   const startTimes = filteredYear.reduce((acc, cur) => {
     const startTime = cur["Time"].split(" ");
     let hour = +startTime[0].split(":")[0];
@@ -121,19 +127,63 @@ function processData(results) {
 
   console.log(avgStart);
 
+  // Add Hour column to data for histogram
+  filteredYear.forEach((rowObj) => {
+    const amPm = rowObj["Time"].split(" ")[1];
+    let hour = rowObj["Time"].split(":")[0];
+
+    rowObj["Hour"] =
+      amPm === "AM" && +hour < 12
+        ? hour
+        : amPm === "AM" && +hour === 12
+        ? "00"
+        : amPm === "PM" && +hour < 12
+        ? String(+hour + 12)
+        : hour;
+  });
+
+  console.log(filteredYear.slice(0, 5));
+
+  // Plot of start times
+  const timeStartPlot = Plot.plot({
+    title: "Hour of the day when lists were started",
+    width: 800,
+    height: 400,
+    x: { domain: [0, 24] },
+    y: { percent: true },
+
+    marks: [
+      Plot.rectY(
+        filteredYear,
+        Plot.binX(
+          { y: "proportion" },
+          { x: "Hour", fill: "steelblue", tip: "x" }
+        )
+      ),
+      Plot.ruleY([0]),
+    ],
+  });
+  timePlotDiv.append(timeStartPlot);
+
   ///////////////////////////////////
   //
   // Display info
   //
   //
   outputTitle.innerHTML = `Your summary for ${selectYear}`;
-  numChecklists.innerHTML = `You reported ${countLists} lists to eBird.`;
-  numSpecies.innerHTML = `Total species for the year: ${countSpecies.length}`;
-  mostOftenSpecies.innerHTML = `${mostSpecies[0]} was the most often seen species, appearing on ${mostSpecies[1]} lists.`;
-  totalBirds.innerHTML = `You reported a total of ${totalBirdCount} individual birds.
-  The high count was ${mostSpeciesCount[0]}, with ${mostSpeciesCount[1]} individuals.`;
-  mostOftenLocation.innerHTML = `You reported lists from ${countLocations} different locations,
-  most often from ${highCountLocation[0]} (${highCountLocation[1]} lists)`;
+  numChecklists.innerHTML = `You reported ${countLists.toLocaleString()} lists to eBird.`;
+  numSpecies.innerHTML = `Total species for the year: ${countSpecies.length.toLocaleString()}`;
+  mostOftenSpecies.innerHTML = `${
+    mostSpecies[0]
+  } was the most often seen species, appearing on ${mostSpecies[1].toLocaleString()} lists.`;
+  totalBirds.innerHTML = `You reported a total of ${totalBirdCount.toLocaleString()} individual birds.
+  The high count was ${
+    mostSpeciesCount[0]
+  }, with ${mostSpeciesCount[1].toLocaleString()} individuals.`;
+  mostOftenLocation.innerHTML = `You reported lists from ${countLocations.toLocaleString()} different locations,
+  most often from ${
+    highCountLocation[0]
+  } (${highCountLocation[1].toLocaleString()} lists)`;
   avgStartTime.innerHTML = `On average, you started your lists in the ${
     avgStart > 12
       ? `${avgStart - 12} PM`
@@ -150,6 +200,7 @@ function readAndProcessCSV(fileName) {
     complete: processData, // Callback to handle results
     error: function (err, file) {
       console.error("Error during CSV parsing:", err, file);
+      outputTitle.innerHTML = "Error loading file, please try again!";
     },
   });
 }
